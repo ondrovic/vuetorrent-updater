@@ -17,9 +17,7 @@ type ResponseData struct {
 	TagName string `json:"tag_name"`
 }
 
-func RunCommand(outputDir string) (string, error) {
-	url := "http://api.github.com/repos/VueTorrent/VueTorrent/releases/latest"
-
+func RunCommand(outputDir string, url string) (string, error) {
 	// Create an instance of your custom data structure
 	var data ResponseData
 
