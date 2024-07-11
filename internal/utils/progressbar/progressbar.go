@@ -2,7 +2,6 @@ package progressbar
 
 import (
 	"fmt"
-
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -16,6 +15,5 @@ func NewDefaultBar(size int64, description string) *progressbar.ProgressBar {
 		progressbar.OptionSetDescription(fmt.Sprintf("[green]%s[reset]", description)),
 		progressbar.OptionFullWidth(),
 	)
-
 	return bar
 }

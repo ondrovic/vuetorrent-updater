@@ -7,72 +7,51 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-
-	"updater/internal/utils/progressbar"
+	progress "updater/internal/utils/progressbar" // Assuming progress is a package, adjust import path accordingly.
 )
 
-var (
-    // Mutex to synchronize access to the console output
-    consoleMutex sync.Mutex
-)
+var consoleMutex sync.Mutex // Mutex to synchronize access to the console output.
 
 // DownloadFile downloads a file from the specified URL to the specified output directory.
 func DownloadFile(name string, url string, outputDir string) (string, error) {
-    // Create the output directory if it doesn't exist
-    err := os.MkdirAll(outputDir, os.ModePerm)
-    if err != nil {
-        return "", fmt.Errorf("failed to create output directory: %v", err)
-    }
+	// Create the output directory if it doesn't exist.
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to create output directory: %v", err)
+	}
 
-    // Get the file name from the URL
-    fileName := filepath.Base(url)
-    outputPath := filepath.Join(outputDir, fileName)
+	// Get the file name from the URL and construct the full path.
+	fileName := filepath.Base(url)
+	outputPath := filepath.Join(outputDir, fileName)
 
-    // Create the file
-    outFile, err := os.Create(outputPath)
-    if err != nil {
-        return "", fmt.Errorf("failed to create file: %v", err)
-    }
-    defer outFile.Close()
+	// Create the file.
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %v", err)
+	}
+	defer outFile.Close() // Ensure the file is closed when done.
 
-    // Create a new HTTP request
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return "", fmt.Errorf("failed to create HTTP request: %v", err)
-    }
+	// Perform an HTTP GET request.
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to download file: %v", resp.Status)
+	}
+	defer resp.Body.Close() // Ensure the response body is closed when done.
 
-    // Perform the request
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return "", fmt.Errorf("failed to perform HTTP request: %v", err)
-    }
-    defer resp.Body.Close()
+	// Initialize and start a progress bar for the download.
+	barFileDownload := progress.NewDefaultBar(resp.ContentLength, fmt.Sprintf("Downloading: '%v'", name))
+	defer barFileDownload.Finish() // Finish the progress bar when function exits.
 
-    // Check if the request was successful
-    if resp.StatusCode != http.StatusOK {
-        return "", fmt.Errorf("failed to download file: %v", resp.Status)
-    }
-
-
-    barFileDownload := progressbar.NewDefaultBar(
-        resp.ContentLength,
-        fmt.Sprintf("Downloading: '%v'", name),
-    )
-
-    // Synchronize output to prevent overlapping with other progress bars
     consoleMutex.Lock()
     defer consoleMutex.Unlock()
 
-    // Copy the content to the file and update the progress bar
-    _, err = io.Copy(io.MultiWriter(outFile, barFileDownload), resp.Body)
-    if err != nil {
-        return "", fmt.Errorf("failed to save file: %v", err)
-    }
+	// Copy the content to the file and update the progress bar concurrently.
+	_, err = io.Copy(io.MultiWriter(outFile, barFileDownload), resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to save file: %v", err)
+	}
 
-    // Finish the progress bar
-    barFileDownload.Finish()
+	// Print a newline for cleaner console output when done downloading.
+	fmt.Println()
 
-    fmt.Println()
-
-    return outputPath, nil
+	return outputPath, nil
 }

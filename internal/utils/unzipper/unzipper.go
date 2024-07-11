@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"updater/internal/utils/progressbar"
+	"updater/internal/utils/progressbar" // Assuming progressbar is in this package for simplicity. Adjust import path as necessary.
 )
 
 var (
@@ -26,15 +26,13 @@ func UnzipWithProgress(src string, dest string) error {
 	defer r.Close()
 
 	// Get total size of all files in the zip archive
-	var totalSize int64
+	var totalSize int64 = 0
 	for _, f := range r.File {
 		totalSize += int64(f.UncompressedSize64)
 	}
 
-	barExtract := progressbar.NewDefaultBar(
-		totalSize,
-		fmt.Sprintf("Extracting '%s'", src),
-	)
+	barExtract := progressbar.NewDefaultBar(totalSize, fmt.Sprintf("Extracting '%s'", src))
+	defer barExtract.Finish() // Defer the finish call to ensure it runs even if there's an error.
 
 	// Synchronize output to prevent overlapping with other progress bars
 	consoleMutex.Lock()
@@ -62,27 +60,21 @@ func UnzipWithProgress(src string, dest string) error {
 			if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
 			}
+			defer outFile.Close() // Defer closing the file to ensure it runs even if there's an error copying contents.
 
 			rc, err := f.Open()
 			if err != nil {
 				return fmt.Errorf("failed to open file in zip: %v", err)
 			}
+			defer rc.Close() // Defer closing the reader to ensure it runs even if there's an error copying contents.
 
 			// Copy the file contents with progress
 			_, err = io.Copy(io.MultiWriter(outFile, barExtract), rc)
-
-			// Close the file and reader
-			outFile.Close()
-			rc.Close()
-
 			if err != nil {
 				return fmt.Errorf("failed to copy file contents: %v", err)
 			}
 		}
 	}
-
-	// Finish extraction progress bar
-	barExtract.Finish()
 
 	fmt.Println()
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"updater/internal/utils/progressbar"
+	progress "updater/internal/utils/progressbar"
 )
 
 var (
@@ -20,7 +20,7 @@ func DeleteFileWithProgress(filepath string) error {
 		return fmt.Errorf("failed to get file information: %v", err)
 	}
 
-	barDelete := progressbar.NewDefaultBar(
+	barDelete := progress.NewDefaultBar(
 		fileInfo.Size(),
 		fmt.Sprintf("Deleting '%s'", filepath),
 	)
