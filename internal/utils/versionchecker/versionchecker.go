@@ -85,7 +85,8 @@ func readFile(filepath string) (string, error) {
 		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
-		return "", err}
+		return "", err
+	}
 	fileContents := ""
 	for i, line := range lines {
 		if i == len(lines)-1 { // If this is the last element, don't add "\n"

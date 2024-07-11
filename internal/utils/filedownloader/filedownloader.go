@@ -41,8 +41,8 @@ func DownloadFile(name string, url string, outputDir string) (string, error) {
 	barFileDownload := progress.NewDefaultBar(resp.ContentLength, fmt.Sprintf("Downloading: '%v'", name))
 	defer barFileDownload.Finish() // Finish the progress bar when function exits.
 
-    consoleMutex.Lock()
-    defer consoleMutex.Unlock()
+	consoleMutex.Lock()
+	defer consoleMutex.Unlock()
 
 	// Copy the content to the file and update the progress bar concurrently.
 	_, err = io.Copy(io.MultiWriter(outFile, barFileDownload), resp.Body)

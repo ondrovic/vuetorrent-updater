@@ -8,10 +8,7 @@ import (
 	progress "updater/internal/utils/progressbar"
 )
 
-var (
-	// Mutex to synchronize access to the console output
-	consoleMutex sync.Mutex
-)
+var consoleMutex sync.Mutex // Mutex to synchronize access to the console output.
 
 // DeleteFileWithProgress deletes a file and shows progress using a progress bar.
 func DeleteFileWithProgress(filepath string) error {
