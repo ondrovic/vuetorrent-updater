@@ -26,6 +26,7 @@ type Options struct {
 	InstalledVersionPath string
 	DownloadedFile       string
 	UpdateStatus         string
+	ContentType          string
 }
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 func checkVersionAndUpdate(opts *Options) {
 	if opts.CheckVersion {
 		versionPath := fmt.Sprintf("%s/%s", opts.ExtractionPath, "vuetorrent/version.txt")
-		isNewVersion, name, url, ver, err := versionchecker.IsNewVersion(opts.RepoUrl, versionPath)
+		isNewVersion, name, url, ver, contentType, err := versionchecker.IsNewVersion(opts.RepoUrl, versionPath)
 		if err != nil {
 			error.Log(err, "Failed to check for new version")
 			return
@@ -73,6 +74,7 @@ func checkVersionAndUpdate(opts *Options) {
 		opts.ReleaseName = name
 		opts.ReleaseDownloadUrl = url
 		opts.ReleaseVersion = ver
+		opts.ContentType = contentType
 	} else {
 		opts.UpdateStatus = "Already on latest version"
 		return // Added to avoid unnecessary execution of subsequent code when not needed.
